@@ -15,6 +15,7 @@ import { IProtocol } from '@/third-party/protocol-schema';
 import { octokit } from './github/octokit';
 import { fetchWithOptions } from './fetchWithOptions';
 import lineColumn from 'line-column';
+import { buildNeedleRegExp } from './needleRegExp';
 import {
   ParsedAndIndexedCdpComments,
   parseAndIndexCdpComments,
@@ -188,14 +189,7 @@ export class HermesImplementationModel
       name: string,
       needles: string[],
     ) => {
-      const regex = new RegExp(
-        '(\\b|(?<=\\s|[()]))' +
-          '(' +
-          needles.map((needle) => escapeRegExp(needle)).join('|') +
-          ')' +
-          '(\\b|(?=\\s|[()]))',
-        'g',
-      );
+      const regex = buildNeedleRegExp(needles);
       for (const path of pathsToSearch) {
         const file = this.#files.get(path)!;
         const lc = lineColumn(file);
@@ -310,10 +304,6 @@ function pascalCaseToCamelCase(str: string) {
 
 function camelCaseToPascalCase(str: string) {
   return str[0].toUpperCase() + str.slice(1);
-}
-
-function escapeRegExp(str: string) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function quoteCppString(str: string) {
